@@ -1,10 +1,39 @@
 #!/bin/bash
-USER=$1
-HOST=$2
-PASS=$3
+PROG=$(basename $0)
+NO_ARGS=0 
+E_OPTERROR=85
+
+# Script invoked with no command-line args?
+if [ $# -eq "$NO_ARGS" ]; then
+  echo "Usage: $prog [-h host] [-u username] [-p password]"
+  echo "       $prog -H for help."
+  exit $E_OPTERROR
+fi
+
+showhelp() {
+  echo "Usage: $PROG [-h host] [-u username] [-p password]"
+  echo " -h: host"
+  echo " -u: username"
+  echo " -p: password"
+  echo " -H: this help message"
+  exit 2
+}
+
+USER=
+HOST=
+PASS=
 NOW=$(date +"%m-%d-%Y")
 DIR="data_$NOW"
 FILE="data.tgz"
+
+while getopts "h:u:p:H" name; do
+	case $name in
+		h) HOST=$OPTARG;;
+		u) USER=$OPTARG;;
+		p) PASS=$OPTARG;;
+		H) showhelp $0;;
+	esac
+done
 
 if [ -d "$DIR" ]; then
 	rm -R $DIR
