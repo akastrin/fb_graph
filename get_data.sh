@@ -1,85 +1,103 @@
 #!/bin/bash
-PROG=$(basename $0)
+prog=$(basename $0)
 NO_ARGS=0 
 E_OPTERROR=85
 
 # Script invoked with no command-line args?
 if [ $# -eq "$NO_ARGS" ]; then
   echo "Usage: $prog [-h host] [-u username] [-p password]"
-  echo "       $prog -H for help."
+  echo "       $prog -help for help."
   exit $E_OPTERROR
 fi
 
 showhelp() {
-  echo "Usage: $PROG [-h host] [-u username] [-p password]"
+  echo "Usage: $prog [-h host] [-u username] [-p password]"
   echo " -h: host"
   echo " -u: username"
   echo " -p: password"
-  echo " -H: this help message"
+  echo " -help: this help message"
   exit 2
 }
 
-USER=
-HOST=
-PASS=
-NOW=$(date +"%m-%d-%Y")
-DIR="data_$NOW"
-FILE="data.tgz"
+user=""
+host=""
+pass=""
+now=$(date +"%m-%d-%Y")
+dir="data_$now"
+file="data.tgz"
 
-while getopts "h:u:p:H" name; do
-	case $name in
-		h) HOST=$OPTARG;;
-		u) USER=$OPTARG;;
-		p) PASS=$OPTARG;;
-		H) showhelp $0;;
-	esac
+while getopts "h:u:p:help" name; do
+  case $name in
+    h)
+      host=$OPTARG
+    ;;
+    u)
+      user=$OPTARG
+    ;;
+    p)
+      pass=$OPTARG
+    ;;
+    help)
+      showhelp $0
+    ;;
+  esac
 done
 
-if [ -d "$DIR" ]; then
-	rm -R $DIR
-	mkdir $DIR
+if [ -d "$dir" ]; then
+  rm -R $dir
+  mkdir $dir
 else
-	mkdir $DIR
+  mkdir $dir
 fi
 
-CMD1=$(expect << EOF
-spawn ssh $USER@$HOST
+cmd1=$(expect << EOF
+spawn ssh $user@$host
 expect "password: "
-send "$PASS\n"
-expect "$ "
-send "cd /tmp\n"
-expect "$ "
-send "tar -czf $FILE \`find . -maxdepth 1 -name 'f2p_*' -print\`\n"
-expect "$ "
-send "logout"
+send "$pass\n"
+expect {
+  "Permission denied, please try again." {
+    send_user "Wrong password."
+    exit
+  }
+  "$ " {
+    send "cd /tmp\n"
+    expect "$ "
+    send "tar -czf $file \`find . -maxdepth 1 -name 'f2p_*' -print\`\n"
+    expect "$ "
+    send "logout"
+    exit
+  }
+}
 EOF)
 
-CMD2=$(expect << EOF
-spawn scp $USER@$HOST:/tmp/$FILE $DIR
+cmd2=$(expect << EOF
+spawn scp $user@$host:/tmp/$file $dir
 expect "password: "
-send "$PASS\n"
+send "$pass\n"
 expect "$ "
 EOF)
 
 CMD3=$(expect << EOF
-spawn ssh $USER@$HOST
+spawn ssh $user@$host
 expect "password: "
-send "$PASS\n"
+send "$pass\n"
 expect "$ "
 send "cd /tmp\n"
 expect "$ "
-send "rm $FILE\n"
+send "rm $file\n"
 expect "$ "
 send "logout"
 EOF)
 
-echo "$CMD1"
-echo "$CMD2"
-echo "$CMD3"
-cd $DIR
-tar -xzf $FILE
-rm $FILE
-COUNT=$(ls -1 | wc -l | awk '{gsub(/^ +| +$/, "")}1')
+echo "$cmd1"
+echo "$?"
+echo "$cmd2"
+echo "$?"
+echo "$cmd3"
+cd $dir
+tar -xzf $file
+rm $file
+count=$(ls -1 | wc -l | awk '{gsub(/^ +| +$/, "")}1')
 cd ..
 clear
-echo "All done. Extracted $COUNT *.net files."
+echo "All done. Extracted $count *.net files."
