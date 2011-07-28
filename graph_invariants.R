@@ -37,12 +37,7 @@ ComputeAll  <- function(file) {
   return(c(diam, giant.size))
 }
   	
-# Apply ComputeAll function to each element in my.files
+# Apply ComputeAll() function to each element in my.files
 test1 <- lapply(X=my.files, FUN=ComputeAll)
 # Reshape list to data.frame
 test2 <- as.data.frame(x=do.call(what=rbind, args=bla))
-
-
-
-
-
