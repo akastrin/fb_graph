@@ -1,7 +1,3 @@
-
-graph <- GetGraph(file=my.files[20])
-x <- degree(graph) + 1
-
 FitPowerLaw <- function(x) {
   require(VGAM)
   x <-  as.integer(x)
