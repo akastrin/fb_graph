@@ -1,4 +1,2 @@
 Copy data from server: sh get_data.sh -h host -u username -p password
-
-TODO
-- Add error handling.
+Convert id2name: ls DATADIR | python fb_id2name.py
