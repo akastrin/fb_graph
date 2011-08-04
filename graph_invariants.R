@@ -1,43 +1,21 @@
 setwd("~/Desktop/fb_graph")
-require(igraph)
+require(package=igraph, quietly=TRUE)
+require(package=plyr, quietly=TRUE)
+source(file="my_functions.R")
+source(file="power_law.R")
+args <- commandArgs(trailingOnly=TRUE)
+data.dir <- args[1]
+limit <- as.integer(args[2])
 
-data.dir <- "data_07-25-2011"
-my.files <- dir(path=data.dir)
+all.files <- dir(path=data.dir)
+my.files <- FilterGraphs(file.list=all.files, limit=limit)$files
 
-# Read Pajek file to graph object
-GetGraph <- function(file) {
-  awk.str <- "awk \'{if(NR==1)sub(/^\xef\xbb\xbf/, \"\"); print}\'"
-  file.nobom  <- paste(awk.str, " ", "./", data.dir, "/", file, sep="")
-  pipe.con <- pipe(description=file.nobom, encoding="UTF-8")
-  my.graph <- read.graph(file=pipe.con, format="pajek")
-  return(my.graph)
-}
-
-# Compute diameter (wrapper only)
-GetDiameter <- function(graph) {
-  graph.diam <- diameter(graph=graph, directed=FALSE)
-  return(graph.diam)
-}
-
-# Compute size of giant component
-GetGiantCompSize <- function(graph) {
-  graph.size <- vcount(graph=graph)
-  cl <- clusters(graph=graph)
-  subgraph <- subgraph(graph=graph,
-                       v=which(cl$membership == which.max(cl$csize) - 1) - 1)
-  subgraph.size <- vcount(graph=subgraph)
-  return(subgraph.size)
-}
-
-# Wrapper for functions above
-ComputeAll  <- function(file) {
-  graph <- GetGraph(file=file)
-  diam <- GetDiameter(graph=graph)
-  giant.size <- GetGiantCompSize(graph=graph)
-  return(c(diam, giant.size))
-}
-  	
+if (is.null(my.files)) stop("Try again with different limit value.")
 # Apply ComputeAll() function to each element in my.files
-test1 <- lapply(X=my.files, FUN=ComputeAll)
-# Reshape list to data.frame
-test2 <- as.data.frame(x=do.call(what=rbind, args=bla))
+message("Start processing. Please wait...")
+lol <- lapply(X=my.files, FUN=ComputeAll)
+# Reshape list of lists to data.frame
+# results <- ldply(results, data.frame)
+out <- as.data.frame(do.call(rbind, lapply(X=lol, FUN=c, recursive=TRUE)),
+		     row.names=my.files)
+write.csv(x=out, file="graph_invariants.csv")
