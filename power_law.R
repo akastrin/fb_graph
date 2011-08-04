@@ -1,5 +1,6 @@
+# Check direct variant to solve xmin problem
 FitPowerLaw <- function(x) {
-  require(VGAM)
+  suppressMessages(require(VGAM))
   x <-  as.integer(x)
 
   # Range of scaling parameters
@@ -29,6 +30,7 @@ FitPowerLaw <- function(x) {
     # Compute KS statistic
     fit <- cumsum((((xmin:xmax)^-vec[I])) / 
 		  (zvec[I] - sum((1:(xmin-1))^-vec[I])))
+    # Dirty, dirty, ...
     cdi <- cumsum(hist(z, c(min(z) - 1, (xmin + 0.5):xmax, max(z) + 1),
 		       plot=FALSE)$counts / n)
     dat[i, ] <- c(max(abs(fit - cdi)), vec[I])
@@ -39,4 +41,9 @@ FitPowerLaw <- function(x) {
   xmin <- xmins[I]
   n <- sum(x >= xmin)
   alpha <- dat[I, 2]
+  # Correction for finite sample size
+  alpha <- alpha * (n - 1) / n + 1 / n
+  pval <- 1 - .C("pkolmogorov2x", p = as.double(D), as.integer(n), PACKAGE = "stats")$p
+  rval <- list(statistic=D, p.value=pval, xmin=xmin, n=n, alpha=alpha)
+  return(rval)
 }
