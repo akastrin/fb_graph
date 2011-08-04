@@ -1,2 +1,7 @@
 Copy data from server: sh get_data.sh -h host -u username -p password
 Convert id2name: ls DATADIR | python fb_id2name.py
+Run graph_invariants.R step-by-step inside R
+Install igraph and VGAM packages from CRAN before you run graph_invariants.R
+Important: select appropriate limit value for FilterGraphs() function
+Run main script form shell: Rscript graph_invariants.R DATADIR MINEDGES
+Example: Rscript graph_invariants.R data_07-25-2011/ 3
