@@ -1,6 +1,5 @@
 setwd("~/Desktop/fb_graph")
 require(package=igraph, quietly=TRUE)
-require(package=plyr, quietly=TRUE)
 source(file="my_functions.R")
 source(file="power_law.R")
 args <- commandArgs(trailingOnly=TRUE)
@@ -15,7 +14,6 @@ if (is.null(my.files)) stop("Try again with different limit value.")
 message("Start processing. Please wait...")
 lol <- lapply(X=my.files, FUN=ComputeAll)
 # Reshape list of lists to data.frame
-# results <- ldply(results, data.frame)
 out <- as.data.frame(do.call(rbind, lapply(X=lol, FUN=c, recursive=TRUE)),
 		     row.names=my.files)
 write.csv(x=out, file="graph_invariants.csv")
